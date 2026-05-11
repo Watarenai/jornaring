@@ -2,3 +2,11 @@ node_modules
 dist
 .env
 .env.local
+
+# ytmusicapi 認証ファイル（Cookie を含むためコミット禁止）
+scripts/ytm_auth.json
+# デバッグ用出力
+scripts/liked_songs_debug.json
+# Python キャッシュ
+__pycache__/
+*.py[cod]
