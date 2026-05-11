@@ -1,0 +1,51 @@
+name: YouTube Music → Apple Music 同期
+
+on:
+  schedule:
+    # 毎日 日本時間 07:00（UTC 22:00 前日）
+    - cron: "0 22 * * *"
+  # 手動実行も可能にする
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # synced_songs.json を commit/push するために必要
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Python をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 依存ライブラリをインストール
+        run: pip install -r requirements.txt
+
+      - name: 同期を実行
+        env:
+          YTM_COOKIE: ${{ secrets.YTM_COOKIE }}
+          APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_PRIVATE_KEY: ${{ secrets.APPLE_PRIVATE_KEY }}
+          APPLE_MUSIC_USER_TOKEN: ${{ secrets.APPLE_MUSIC_USER_TOKEN }}
+        run: python sync.py
+
+      - name: synced_songs.json を commit & push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add synced_songs.json
+          # 変更がなければ commit をスキップ（git diff --cached で確認）
+          if git diff --cached --quiet; then
+            echo "synced_songs.json に変更なし。commit をスキップ。"
+          else
+            git commit -m "chore: synced_songs.json を更新 ($(date -u '+%Y-%m-%d'))"
+            git push origin main
+          fi
