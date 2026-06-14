@@ -18,13 +18,20 @@ function save(entries: Entry[]) {
 export function useEntries() {
   const [entries, setEntries] = useState<Entry[]>(load)
 
-  const addEntry = useCallback((date: string, experience: string, learning: string) => {
+  const addEntry = useCallback((
+    date: string,
+    experience: string,
+    learning: string,
+    framework?: string,
+    structured?: Record<string, string>
+  ) => {
     const entry: Entry = {
       id: crypto.randomUUID(),
       date,
       experience,
       learning,
       createdAt: new Date().toISOString(),
+      ...(framework ? { framework, structured } : {}),
     }
     setEntries(prev => {
       const next = [entry, ...prev]
@@ -33,10 +40,18 @@ export function useEntries() {
     })
   }, [])
 
-  const updateEntry = useCallback((id: string, experience: string, learning: string) => {
+  const updateEntry = useCallback((
+    id: string,
+    experience: string,
+    learning: string,
+    framework?: string,
+    structured?: Record<string, string>
+  ) => {
     setEntries(prev => {
       const next = prev.map(e =>
-        e.id === id ? { ...e, experience, learning } : e
+        e.id === id
+          ? { ...e, experience, learning, ...(framework ? { framework, structured } : {}) }
+          : e
       )
       save(next)
       return next
